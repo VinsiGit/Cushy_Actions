@@ -26,11 +26,24 @@ action('The Gradiant Maker (WIP)', {
         nsfw: form.bool({ default: false }),
         wierd: form.bool({ default: false, tooltip: 'Will make a depth image to be blended with the gradiants' }),
 
-        theme1: form.string({ default: 'theme1', group: 'Theme' }),
-        theme2: form.string({ default: 'theme2', group: 'Theme' }),
-        theme3: form.string({ default: 'theme3', group: 'Theme' }),
-        theme4: form.string({ default: 'theme4', group: 'Theme' }),
+        themes: form.list({
+            element: () =>
+                form.group({
+                    layout: 'H',
+                    items: () => ({
+                        text: form.str({}),
+                    }),
+                }),
+        }),
         number: form.int({ default: 5, min: 1, tooltip: 'How many will a gradiant be made and bended' }),
+
+        total_steps: form.int({
+            default: 5,
+            min: 1,
+            tooltip: 'How many different colors do you want? (random placement and length)',
+            label: 'total steps',
+        }),
+
         blend_percentage: form.group({
             layout: 'H',
             items: () => ({
@@ -72,10 +85,6 @@ action('The Gradiant Maker (WIP)', {
 
         // --------------------------------------------------
 
-        const themes = ['theme1', 'theme2', 'theme3', 'theme4'] as const
-
-        const themeFor = { theme1: p.theme1, theme2: p.theme2, theme3: p.theme3, theme4: p.theme4 }
-
         // --------------------------------------------------
 
         /*
@@ -89,7 +98,11 @@ action('The Gradiant Maker (WIP)', {
         console.log(`diagonal_correct : ${diagonal_correct}`)
         */
 
-        function MakeGradient(stops_total: number = 5): {
+        function MakeGradient(
+            stops_total: number = 5,
+            width: number = p.width,
+            height: number = p.height,
+        ): {
             gen_Grad: Image_Generate_Gradient
             width_grad: number
             height_grad: number
@@ -145,11 +158,11 @@ action('The Gradiant Maker (WIP)', {
         // graph.PreviewImage({images:MakeGradient().gen_Grad})
         let index = 0
 
-        function blender(times: number = 3, min_blend: number = 0.5, max_blend: number = 0.9) {
+        function blender(times: number = 3, total_steps: number = 5, min_blend: number = 0.5, max_blend: number = 0.9) {
             let image: _IMAGE = graph.Image_Blank({ width: width, height: height, red: 255, green: 255, blue: 255 })
             let index = 0
             while (index < Math.max(times, 1)) {
-                let gradiant = MakeGradient()
+                let gradiant = MakeGradient(total_steps)
                 image = graph.Image_Transpose({
                     image: image,
                     image_overlay: gradiant.gen_Grad,
@@ -177,10 +190,7 @@ action('The Gradiant Maker (WIP)', {
                 modulator: 8,
                 seed: flow.randomSeed(),
             })
-            const blend_percentage =
-                Math.random() *
-                    ((p.blend_percentage?.blend_percentage_max ?? 0.6) - (p.blend_percentage?.blend_percentage_min ?? 0.2)) +
-                (p.blend_percentage?.blend_percentage_min ?? 0.2)
+            const blend_percentage = Math.random() * (max_blend - min_blend) + min_blend
             image = graph.Image_Blending_Mode({
                 image_a: image,
                 image_b: noise,
@@ -282,20 +292,30 @@ action('The Gradiant Maker (WIP)', {
         }
         let samples
         let latent = graph.EmptyLatentImage({ height: height, width: width })
+        for (const theme of p.themes) {
+            theme.text
+            flow.print(theme.text)
 
-        for (const theme of themes) {
             if (p.wierd) {
                 samples = graph.RepeatLatentBatch({
                     samples: latent,
                     amount: p.batchSize,
                 })
             } else {
-                samples = graph.VAEEncode({ pixels: blender(p.number), vae: ckpt })
+                samples = graph.VAEEncode({
+                    pixels: blender(
+                        p.number,
+                        p.total_steps,
+                        p.blend_percentage.blend_percentage_min,
+                        p.blend_percentage.blend_percentage_max,
+                    ),
+                    vae: ckpt,
+                })
             }
-            console.log(themeFor[theme])
+            console.log(theme.text)
             const positive_clip = graph.CLIPTextEncode({
                 clip: clipAndModel,
-                text: `${themeFor[theme]}, ${positive}`,
+                text: `${theme.text}, ${positive}`,
             })
             const negative_clip = graph.CLIPTextEncode({
                 clip: lora_manga ?? clipAndModel,
@@ -319,7 +339,12 @@ action('The Gradiant Maker (WIP)', {
                 graph.PreviewImage({ images: pre })
 
                 samples = graph.Image_Blending_Mode({
-                    image_a: blender(p.number),
+                    image_a: blender(
+                        p.number,
+                        p.total_steps,
+                        p.blend_percentage.blend_percentage_min,
+                        p.blend_percentage.blend_percentage_max,
+                    ),
                     image_b: graph.ImpactImageBatchToImageList({ image: pre }),
                     mode: 'add',
                     blend_percentage: 0.5,
