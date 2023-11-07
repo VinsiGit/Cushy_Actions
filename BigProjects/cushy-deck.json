@@ -1,0 +1,22 @@
+{
+    "$schema": "../../../src/cards/DeckManifest.schema.json",
+    "name": "Big Projects",
+    "authorName": "VinsiGit",
+    "description": "My big projects",
+    "cards": [
+        {
+            "name": "MangaMaker",
+            "deckRelativeFilePath": "./MangaMaker.ts",
+            "style": "A",
+            "illustration": "../_imgs/MangaMaker.png",
+            "description": "Manga maker and color"
+        },
+        {
+            "name": "Game",
+            "deckRelativeFilePath": "./Game.ts",
+            "style": "B",
+            "illustration": "../_imgs/Game.png",
+            "description": "A game"
+        }
+    ]
+}

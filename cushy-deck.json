@@ -1,0 +1,24 @@
+{
+    "$schema": "../../../src/cards/DeckManifest.schema.json",
+    "name": "Gradints",
+    "authorName": "VinsiGit",
+    "description": "Creates a cool random artsy image.",
+    "cards": [
+        {
+            "name": "Gradient Maker V0.9",
+            "deckRelativeFilePath": "./GradientMaker.ts",
+            "priority": 100,
+            "style": "D",
+            // "illustration": "./_imgs/card-img.png",
+            "description": "Creates a gradient that get transformed into a image"
+        },        
+        {
+            "name": "Depth Filler",
+            "deckRelativeFilePath": "./CoolDepth.ts",
+            "priority": 100,
+            "style": "D",
+            // "illustration": "./_imgs/CoolDepth.png",
+            "description": "Makes a Image where the depthmap get turned into random colors, check it out. :)"
+        }
+    ]
+}

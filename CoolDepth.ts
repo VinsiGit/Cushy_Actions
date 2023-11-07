@@ -1,121 +1,139 @@
+import { run_latent, run_model, run_sampler, ui_latent, ui_model, ui_sampler } from './_prefabs/_prefabs'
+
 action({
-    author: 'VinsiGit',
-    name: 'DepthDrawer',
-    description: 'Colors a depth image by ',
+    // author: 'VinsiGit',
+    // name: 'DepthDrawer',
+    // description: 'Colors a depth image by ',
     help: '',
-    ui: (form) => ({
-        model: form.enum({
-            enumName: 'Enum_CheckpointLoaderSimple_ckpt_name',
-            default: 'Normal\\sudachi_v10.safetensors',
-            group: 'Model',
-        }),
+    ui: (form) => {
+        return {
+            // bar: form.choices({ items: () => ({ a1: $.handform(), a2: $.handform() }) }),
+            // faceDetailer: $.faceDetailer(),
 
-        width: form.int({ default: 512, group: 'latent' }),
-        height: form.int({ default: 768, group: 'latent' }), //normaal 768
-        flip: form.bool({ default: false, group: 'latent' }),
+            model: ui_model(form),
+            latent: ui_latent(form),
+            positive: form.string({ default: '' }),
+            negative: form.string({ default: '' }),
 
-        // prompt
-        positive: form.string({ default: '' }),
-        negative: form.string({ default: '' }),
-
-        number: form.int({
-            default: 15,
-            group: 'color',
-            tooltip: 'How many pixels (of 255) it will move per loop, until reaching pixel 255',
-        }),
-        variance: form.int({
-            default: 15,
-            group: 'color',
-            tooltip: 'How many pixels up and down it will take give a color',
-        }),
-
-        denoise1: form.float({ default: 0.6, group: 'denoise' }),
-        denoise2: form.float({ default: 0.6, group: 'denoise' }),
-        gray: form.boolean({ default: false }),
-        color: form.group({
-            tooltip: 'Color range of the new image',
-            layout: 'V',
-            items: () => ({
-                red_max: form.int({ default: 255, min: 0, max: 255 }),
-                red_min: form.int({ default: 0, min: 0, max: 255 }),
-                green_max: form.int({ default: 255, min: 0, max: 255 }),
-                green_min: form.int({ default: 0, min: 0, max: 255 }),
-                blue_max: form.int({ default: 255, min: 0, max: 255 }),
-                blue_min: form.int({ default: 0, min: 0, max: 255 }),
+            number: form.int({
+                default: 15,
+                group: 'color',
+                tooltip: 'How many pixels (of 255) it will move per loop, until reaching pixel 255',
             }),
-        }),
-        colorLast: form.group({
-            tooltip: 'Color of that will replace the white void',
-            layout: 'V',
-            items: () => ({
-                red: form.int({ default: 0, min: 0, max: 255 }),
-                green: form.int({ default: 0, min: 0, max: 255 }),
-                blue: form.int({ default: 0, min: 0, max: 255 }),
+            variance: form.int({
+                default: 15,
+                group: 'color',
+                tooltip: 'How many pixels up and down it will take give a color',
             }),
-        }),
-        batchSize: form.int({ default: 1, min: 1, group: 'latent' }),
 
-        steps: form.int({
-            default: 20,
-            label: 'Steps',
-            min: 0,
-            group: 'KSampler',
-        }),
-
-        cfg: form.float({
-            label: 'CFG',
-            default: 8.0,
-            group: 'KSampler',
-        }),
-
-        sampler: form.enum({
-            label: 'Sampler',
-            enumName: 'Enum_KSampler_sampler_name',
-            default: 'euler',
-            group: 'KSampler',
-        }),
-
-        scheduler: form.enum({
-            label: 'Scheduler',
-            enumName: 'Enum_KSampler_scheduler',
-            default: 'karras',
-            group: 'KSampler',
-        }),
-    }),
+            gray: form.boolean({ default: false }),
+            color: form.group({
+                tooltip: 'Color range of the new image',
+                layout: 'V',
+                items: () => ({
+                    red_max: form.int({ default: 255, min: 0, max: 255 }),
+                    red_min: form.int({ default: 0, min: 0, max: 255 }),
+                    green_max: form.int({ default: 255, min: 0, max: 255 }),
+                    green_min: form.int({ default: 0, min: 0, max: 255 }),
+                    blue_max: form.int({ default: 255, min: 0, max: 255 }),
+                    blue_min: form.int({ default: 0, min: 0, max: 255 }),
+                }),
+            }),
+            colorLast: form.group({
+                tooltip: 'Color of that will replace the white void',
+                layout: 'V',
+                items: () => ({
+                    red: form.int({ default: 0, min: 0, max: 255 }),
+                    green: form.int({ default: 0, min: 0, max: 255 }),
+                    blue: form.int({ default: 0, min: 0, max: 255 }),
+                }),
+            }),
+            sampler: form.group({
+                items: () => ({
+                    denoise: form.float({ step: 0.01, min: 0, max: 1, default: 0.6, label: 'Denoise', group: 'KSampler' }),
+                    steps: form.int({ default: 20, label: 'Steps', min: 0, group: 'KSampler' }),
+                    cfg: form.float({ label: 'CFG', default: 8.0, group: 'KSampler' }),
+                    sampler_name: form.enum({
+                        label: 'Sampler',
+                        enumName: 'Enum_KSampler_sampler_name',
+                        default: 'euler',
+                        group: 'KSampler',
+                    }),
+                    scheduler: form.enum({
+                        label: 'Scheduler',
+                        enumName: 'Enum_KSampler_scheduler',
+                        default: 'karras',
+                        group: 'KSampler',
+                    }),
+                }),
+            }),
+            sampler2: form.group({
+                items: () => ({
+                    denoise: form.float({ step: 0.01, min: 0, max: 1, default: 0.6, label: 'Denoise', group: 'KSampler' }),
+                    steps: form.int({ default: 20, label: 'Steps', min: 0, group: 'KSampler' }),
+                    cfg: form.float({ label: 'CFG', default: 8.0, group: 'KSampler' }),
+                    sampler_name: form.enum({
+                        label: 'Sampler',
+                        enumName: 'Enum_KSampler_sampler_name',
+                        default: 'euler',
+                        group: 'KSampler',
+                    }),
+                    scheduler: form.enum({
+                        label: 'Scheduler',
+                        enumName: 'Enum_KSampler_scheduler',
+                        default: 'karras',
+                        group: 'KSampler',
+                    }),
+                }),
+            }),
+        }
+    },
 
     run: async (flow, p) => {
         const graph = flow.nodes
-        let height = p.height
-        let width = p.width
-        if (p.flip) {
-            height = p.width
-            width = p.height
-        }
 
-        const ckpt = graph.CheckpointLoaderSimple({ ckpt_name: p.model })
+        // const controlnet = graph.ControlNetLoader({ control_net_name: 'control_v11p_sd15_openpose_fp16.safetensors' })
+        // const bbox_detector = graph.UltralyticsDetectorProvider({ model_name: 'bbox/face_yolov8m.pt' })
+        // const SAMLoader = graph.SAMLoader({ model_name: 'sam_vit_b_01ec64.pth', device_mode: 'AUTO' })
+
+        let { ckpt, vae, clip } = run_model(flow, p.model)
 
         const positive = p.positive
         const negative = p.negative
 
-        const positive_clip = graph.CLIPTextEncode({ clip: ckpt, text: positive })
-        const negative_clip = graph.CLIPTextEncode({ clip: ckpt, text: negative })
+        const positive_clip = graph.CLIPTextEncode({ clip, text: positive })
+        const negative_clip = graph.CLIPTextEncode({ clip, text: negative })
+        let latent = await run_latent({ flow, opts: p.latent, vae })
 
-        let latent = graph.EmptyLatentImage({ height: height, width: width, batch_size: p.batchSize })
-        let image = graph.VAEDecode({
-            vae: ckpt,
-            samples: graph.KSampler({
-                model: ckpt,
-                seed: flow.randomSeed(),
-                latent_image: latent,
-                sampler_name: 'euler',
-                scheduler: 'karras',
-                positive: positive_clip,
-                negative: negative_clip,
-            }),
-        }).outputs.IMAGE
-        graph.PreviewImage({ images: image })
+        // let image = graph.VAEDecode({
+        //     vae,
+        //     samples: graph.KSampler({
+        //         model: ckpt,
+        //         seed: flow.randomSeed(),
+        //         latent,
+        //         sampler_name: 'euler',
+        //         scheduler: 'karras',
+        //         positive: positive_clip,
+        //         negative: negative_clip,
+        //     }),
+        // }).outputs.IMAGE
+
+        let image: _IMAGE = run_sampler({
+            flow,
+            ckpt,
+            clip,
+            latent: latent.latent,
+            positive: positive,
+            negative: negative,
+            model: p.sampler2,
+            preview: true,
+            vae,
+        }).image
 
         const depth = graph.LeReS$7DepthMapPreprocessor({ image: image, boost: 'enable' }).outputs.IMAGE
+
+        graph.PreviewImage({ images: depth })
+
         let color_number = 255
 
         let color_red_number_max = p.color.red_max
@@ -131,8 +149,8 @@ action({
 
         let blank
         let redo = graph.Image_Blank({
-            width: p.width,
-            height: p.height,
+            width: latent.width,
+            height: latent.height,
             red: rgb,
             green: rgb,
             blue: rgb,
@@ -149,16 +167,16 @@ action({
             if (p.gray == true) {
                 let color = Math.floor(Math.random() * rgb)
                 blank = graph.Image_Blank({
-                    width: p.width,
-                    height: p.height,
+                    width: latent.width,
+                    height: latent.height,
                     red: color,
                     green: color,
                     blue: color,
                 })
             } else {
                 blank = graph.Image_Blank({
-                    width: p.width,
-                    height: p.height,
+                    width: latent.width,
+                    height: latent.height,
                     red: Math.floor(Math.random() * (color_red_number_max - color_red_number_min)) + color_red_number_min,
                     green: Math.floor(Math.random() * (color_green_number_max - color_green_number_min)) + color_green_number_min,
                     blue: Math.floor(Math.random() * (color_blue_number_max - color_blue_number_min)) + color_blue_number_min,
@@ -210,44 +228,43 @@ action({
             negative: negative_clip,
             positive: positive_clip,
         })
-
-        let latent_images = graph.KSampler({
-            model: ckpt,
-            seed: flow.randomSeed(),
-            latent_image: graph.VAEEncode({ pixels: image, vae: ckpt }),
-            cfg: p.cfg,
-            steps: p.steps,
-            sampler_name: p.sampler,
-            scheduler: p.scheduler,
-            denoise: p.denoise1,
+        let latent_images = run_sampler({
+            flow,
+            ckpt,
+            clip,
+            latent: latent.latent,
             positive: test.outputs.positive ?? positive_clip,
             negative: test.outputs.negative ?? negative_clip,
+            model: p.sampler,
+            preview: true,
+            vae,
         })
-
-        image = graph.VAEDecode({
-            vae: ckpt,
-            samples: latent_images,
-        }).outputs.IMAGE
+        // latent_images = graph.KSampler({
+        //     model: ckpt,
+        //     seed: flow.randomSeed(),
+        //     latent_image: graph.VAEEncode({ pixels: image, vae }),
+        //     cfg: p.cfg,
+        //     steps: p.steps,
+        //     sampler_name: p.sampler1,
+        //     scheduler: p.scheduler,
+        //     denoise: p.denoise1,
+        //     positive: test.outputs.positive ?? positive_clip,
+        //     negative: test.outputs.negative ?? negative_clip,
+        // })
 
         graph.PreviewImage({ images: image })
 
-        latent_images = graph.KSampler({
-            model: ckpt,
-            seed: flow.randomSeed(),
-            latent_image: latent_images,
-            cfg: p.cfg,
-            steps: p.steps,
-            sampler_name: p.sampler,
-            scheduler: p.scheduler,
-            denoise: p.denoise2,
-            positive: test.outputs.positive ?? positive_clip,
-            negative: test.outputs.negative ?? negative_clip,
+        latent_images = run_sampler({
+            flow,
+            ckpt,
+            clip,
+            latent: latent_images.latent,
+            positive: positive,
+            negative: negative,
+            model: p.sampler2,
+            preview: true,
+            vae,
         })
-
-        image = graph.VAEDecode({
-            vae: ckpt,
-            samples: latent_images,
-        }).outputs.IMAGE
         graph.PreviewImage({ images: image })
 
         await flow.PROMPT()

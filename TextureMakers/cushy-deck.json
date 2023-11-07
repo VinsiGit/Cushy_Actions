@@ -1,0 +1,22 @@
+{
+    "$schema": "../../../src/cards/DeckManifest.schema.json",
+    "name": "Big Projects",
+    "authorName": "VinsiGit",
+    "description": "My big projects",
+    "cards": [
+        {
+            "name": "Skybox",
+            "deckRelativeFilePath": "./Skybox.ts",
+            "style": "C",
+            "illustration": "../_imgs/Skybox.png",
+            "description": "A Skybox maker"
+        },
+        {
+            "name": "Seamless Tiled",
+            "deckRelativeFilePath": "./Tiled.ts",
+            "style": "D",
+            "illustration": "../_imgs/Tiled.webp",
+            "description": "A seamless tiled maker"
+        }
+    ]
+}
