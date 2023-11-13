@@ -24,12 +24,20 @@ action({
             }),
         }),
         loras: form.loras({ default: [] }),
-        colorStrength: form.float({ default: 1.0, min: 0, max: 1, step: 0.1 }),
+        controleNet: form.group({
+            items: () => ({
+                controleModel: form.enum({
+                    enumName: 'Enum_ControlNetLoader_control_net_name',
+                    default: 'control_v11p_sd15s2_lineart_anime_fp16.safetensors',
+                }),
+                colorStrength: form.float({ default: 1.0, min: 0, max: 1, step: 0.1 }),
+            }),
+        }),
     }),
     run: async (flow, p) => {
         const graph = flow.nodes
 
-        const controlnet = graph.ControlNetLoader({ control_net_name: 'control_v11p_sd15s2_lineart_anime_fp16.safetensors' })
+        const controlnet = graph.ControlNetLoader({ control_net_name: p.controleNet.controleModel })
 
         // MODEL, clip skip, vae, etc. ---------------------------------------------------------------
         let { ckpt: ckptBase, vae, clip: clipBase } = run_model(flow, p.model)
@@ -93,7 +101,7 @@ action({
             image: graph.AnimeLineArtPreprocessor({ image: sampleManga.image }),
             positive: graph.CLIPTextEncode({ clip, text: p.color + ', ' + x.text }),
             negative: negative,
-            strength: p.colorStrength,
+            strength: p.controleNet.colorStrength,
         })
         run_sampler({
             ckpt,
