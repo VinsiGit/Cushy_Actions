@@ -15,6 +15,7 @@ import type { FormBuilder } from 'src/controls/FormBuilder'
 import type { ReqResult } from 'src/controls/IWidget'
 import type { Slot } from 'src/core/Slot'
 import type { WidgetPromptOutput } from 'src/widgets/prompter/WidgetPromptUI'
+import { boolean } from 'zod'
 
 // this should be a default
 export type OutputFor<UIFn extends (form: FormBuilder) => any> = ReqResult<ReturnType<UIFn>>
@@ -80,7 +81,7 @@ export const ui_highresfix = (form: FormBuilder) =>
             scaleFactor: form.float({ min: 0, max: 3, step: 0.01, default: 1 }),
             steps: form.int({ min: 1, default: 15 }),
             denoise: form.float({ min: 0, default: 0.5, max: 1, step: 0.01 }),
-            saveIntermediaryImage: form.bool({ default: true }),
+            saveIntermediaryImage: form.bool({ default: false }),
         }),
     })
 
@@ -90,7 +91,7 @@ export const ui_model = (form: FormBuilder) => {
         items: () => ({
             ckpt_name: form.enum({
                 enumName: 'Enum_CheckpointLoaderSimple_ckpt_name',
-                default: 'Normal\\sudachi_v10.safetensors',
+                // default: 'Normal\\sudachi_v10.safetensors',
                 group: 'Model',
             }),
             vae: form.enumOpt({ enumName: 'Enum_VAELoader_vae_name', group: 'Model' }),
@@ -188,11 +189,14 @@ export const run_Detailer = (p: {
     preview?: boolean
     vae: _VAE
     bbox_detector: _BBOX_DETECTOR
+    SAM?: SAMLoader
+    guide?: boolean
 }): { image: _IMAGE } => {
     const graph = p.flow.nodes
     const image = graph.FaceDetailer({
         image: p.image,
         bbox_detector: p.bbox_detector,
+        sam_model_opt: p.SAM,
         model: p.ckpt,
         clip: p.clip,
         vae: p.vae,
@@ -200,9 +204,10 @@ export const run_Detailer = (p: {
         scheduler: 'karras',
         positive: typeof p.positive === 'string' ? graph.CLIPTextEncode({ clip: p.clip, text: p.positive }) : p.positive,
         negative: typeof p.negative === 'string' ? graph.CLIPTextEncode({ clip: p.clip, text: p.negative }) : p.negative,
-        sam_detection_hint: 'none',
+        sam_detection_hint: 'center-1',
         wildcard: '',
         sam_mask_hint_use_negative: 'False',
+        guide_size_for: p.guide ?? true,
     }).outputs.image
     if (p.preview) graph.PreviewImage({ images: image })
 
@@ -234,11 +239,15 @@ export const ui_themes = (form: FormBuilder) =>
 export const ui_latent = (form: FormBuilder) => {
     return form.group({
         items: () => ({
-            image: form.imageOpt({ group: 'latent' }),
-            resize: form.bool({ default: false, group: 'latent' }),
+            image: form.groupOpt({
+                items: () => ({
+                    image: form.image({ group: 'latent' }),
+                    resize: form.bool({ default: false, group: 'latent' }),
+                }),
+            }),
             flip: form.bool({ default: false, group: 'latent' }),
             width: form.int({ default: 512, group: 'latent', step: 128, min: 128, max: 4096 }),
-            height: form.int({ default: 768, group: 'latent', step: 128, min: 128, max: 4096 }),
+            height: form.int({ default: 512, group: 'latent', step: 128, min: 128, max: 4096 }),
             batchSize: form.int({ default: 1, group: 'latent', min: 1, max: 20 }),
         }),
     })
@@ -273,9 +282,9 @@ export const run_latent = async (p: {
 
     // case 1. start form image
     if (opts.image) {
-        const image = await p.flow.loadImageAnswer(opts.image)
+        const image = await p.flow.loadImageAnswer(opts.image.image)
         latent = graph.VAEEncode({ pixels: image, vae: p.vae })
-        if (opts.resize) {
+        if (opts.image.resize) {
             latent = graph.LatentUpscale({
                 samples: latent,
                 crop: 'disabled',
@@ -407,4 +416,59 @@ export const ui_shapePickerExt = <const T extends string>(form: FormBuilder, val
         label: 'Shape',
         choices: values.map((t) => ({ type: t })),
     })
+}
+
+export const ui_tile = (form: FormBuilder) => {
+    return form.groupOpt({
+        default: false,
+        items: () => ({
+            tileH: form.int({ min: 0, max: 10, default: 2 }),
+            tileV: form.int({ min: 0, max: 10, default: 2 }),
+        }),
+    })
+}
+
+export const run_tile = (p: {
+    //
+    flow: Runtime
+    opts: OutputFor<typeof ui_tile>
+    width: number
+    height: number
+    image: _IMAGE
+}): _IMAGE => {
+    const graph = p.flow.nodes
+    const opts = p.opts
+    const width = p.width
+    const height = p.height
+    const image = p.image
+    // misc calculatiosn
+
+    if (opts) {
+        const tileH = opts.tileH
+        const tileV = opts.tileV
+        let BigImage: _IMAGE = graph.Image_Resize({
+            image,
+            mode: 'resize',
+            resampling: 'bilinear',
+            supersample: 'false',
+            resize_width: width * tileH,
+            resize_height: height * tileV,
+        }).outputs.IMAGE
+        for (let i = 0; i < tileH; i++) {
+            for (let j = 0; j < tileV; j++) {
+                BigImage = graph.Image_Transpose({
+                    image: BigImage,
+                    image_overlay: image,
+                    width,
+                    height,
+                    X: width * i,
+                    Y: height * j,
+                }).outputs.IMAGE
+                // graph.PreviewImage({ images: imageNeo })
+            }
+        }
+        graph.PreviewImage({ images: BigImage })
+        return BigImage
+    }
+    return image
 }
