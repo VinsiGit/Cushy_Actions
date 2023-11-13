@@ -19,6 +19,27 @@
             "style": "D",
             // "illustration": "./_imgs/CoolDepth.png",
             "description": "Makes a Image where the depthmap get turned into random colors, check it out. :)"
+        },
+        {
+            "name": "MangaMaker",
+            "deckRelativeFilePath": "./BigProjects/MangaMaker.ts",
+            "style": "A",
+            "illustration": "/_imgs/MangaMaker.png",
+            "description": "Manga maker and color"
+        },
+        {
+            "name": "Skybox",
+            "deckRelativeFilePath": "./TextureMakers/Skybox.ts",
+            "style": "C",
+            // "illustration": "/_imgs/Skybox.png",
+            "description": "A Skybox maker"
+        },
+        {
+            "name": "Seamless Tiled",
+            "deckRelativeFilePath": "./TextureMakers/Tiled.ts",
+            "style": "D",
+            "illustration": "/_imgs/Tiled.webp",
+            "description": "A seamless tiled maker"
         }
     ]
 }
