@@ -1,4 +1,3 @@
-import main from 'electron/main'
 import type { WidgetPromptOutput } from 'src/widgets/prompter/WidgetPromptUI'
 import {
     run_Detailer,
@@ -7,26 +6,27 @@ import {
     run_prompt,
     run_sampler,
     run_tile,
-    ui_highresfix,
     ui_latent,
     ui_model,
     ui_sampler,
     ui_tile,
 } from '../_prefabs/_prefabs'
 
-action({
+app({
     ui: (form) => ({
         positiveMain: form.prompt({ default: 'texture, 2d texture, detailed, masterpiece, ' }),
         positive: form.prompt({ label: 'promptCenter' }),
         positiveOpt: form.promptOpt({ label: 'promptCorner' }),
         denoise2: form.float({ label: 'denoiseCenter', min: 0, max: 1, step: 0.01, default: 0.6 }),
         denoise1: form.float({ label: 'denoiseCorner', min: 0, max: 1, step: 0.01, default: 0.75 }),
-        negative: form.prompt({ default: 'child, loli, text, watermark' }),
+        negative: form.prompt({ default: '(child:1.2, loli:1.2), nsfw, nude, text, watermark' }),
+        tile: ui_tile(form),
 
         model: ui_model(form),
 
         latent: ui_latent(form),
         sampler: ui_sampler(form),
+        normal: form.boolean({ default: true }),
         SAM: form.enumOpt({ enumName: 'Enum_SAMLoader_model_name' }),
         bbox_detectors: form.list({
             element: () =>
@@ -35,7 +35,6 @@ action({
                     // default: 'bbox/face_yolov8m.pt',
                 }),
         }),
-        tile: ui_tile(form),
     }),
     run: async (flow, p) => {
         const graph = flow.nodes
@@ -101,8 +100,8 @@ action({
         // START IMAGE -------------------------------------------------------------------------------
         const latent = await run_latent({ flow, opts: p.latent, vae })
 
-        const width = p.latent.width
-        const height = p.latent.height
+        const width = p.latent.size.width
+        const height = p.latent.size.height
 
         let image: _IMAGE = run_sampler({
             ckpt: ckptMain,
@@ -173,6 +172,10 @@ action({
             negative: negative,
             preview: true,
         }).image
+        if (p.normal) {
+            graph.PreviewImage({ images: graph.BAE$7NormalMapPreprocessor({ image }) })
+            graph.PreviewImage({ images: graph.MiDaS$7NormalMapPreprocessor({ image }) })
+        }
 
         if (p.bbox_detectors.length > 0) {
             for (const bbox_detectorName of p.bbox_detectors) {

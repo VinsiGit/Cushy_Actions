@@ -1,6 +1,6 @@
 {
-    "$schema": "../../../src/cards/DeckManifest.schema.json",
-    "name": "Big Projects",
+    "$schema": "../../../../src/cards/DeckManifest.schema.json",
+    "name": "MangaMaker",
     "authorName": "VinsiGit",
     "description": "My big projects",
     "cards": [
@@ -10,13 +10,6 @@
             "style": "A",
             "illustration": "../_imgs/MangaMaker.png",
             "description": "Manga maker and color"
-        },
-        {
-            "name": "Game",
-            "deckRelativeFilePath": "./Game.ts",
-            "style": "B",
-            "illustration": "../_imgs/Game.png",
-            "description": "A game"
         }
     ]
 }

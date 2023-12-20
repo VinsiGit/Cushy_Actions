@@ -4,14 +4,14 @@
     "authorName": "VinsiGit",
     "description": "Creates a cool random artsy image.",
     "cards": [
-        {
-            "name": "Gradient Maker V0.9",
-            "deckRelativeFilePath": "./GradientMaker.ts",
-            "priority": 100,
-            "style": "D",
-            // "illustration": "./_imgs/card-img.png",
-            "description": "Creates a gradient that get transformed into a image"
-        },        
+        // {
+        //     "name": "Gradient Maker V0.9",
+        //     "deckRelativeFilePath": "./GradientMaker.ts",
+        //     "priority": 100,
+        //     "style": "D",
+        //     // "illustration": "./_imgs/card-img.png",
+        //     "description": "Creates a gradient that get transformed into a image"
+        // },        
         {
             "name": "Depth Filler",
             "deckRelativeFilePath": "./CoolDepth.ts",
@@ -22,9 +22,9 @@
         },
         {
             "name": "MangaMaker",
-            "deckRelativeFilePath": "./BigProjects/MangaMaker.ts",
+            "deckRelativeFilePath": "./MangaMaker/MangaMaker.ts",
             "style": "A",
-            "illustration": "/_imgs/MangaMaker.png",
+            "illustration": "./_imgs/MangaMaker.png",
             "description": "Manga maker and color"
         },
         {
@@ -38,7 +38,7 @@
             "name": "Seamless Tiled",
             "deckRelativeFilePath": "./TextureMakers/Tiled.ts",
             "style": "D",
-            "illustration": "/_imgs/Tiled.webp",
+            "illustration": "./_imgs/Tiled.webp",
             "description": "A seamless tiled maker"
         }
     ]
